@@ -1,5 +1,5 @@
 import pandas as pd
-import mysql.connector
+import pymysql
 
 # DB 연결 설정
 config = {
@@ -7,7 +7,8 @@ config = {
     'password': 'db_user',
     'host': 'localhost',
     'database': 'movie',
-    'autocommit': True
+    'charset': 'utf8mb4',
+    'cursorclass': pymysql.cursors.DictCursor
 }
 
 # 시트 두 개 읽고 합치기
@@ -21,7 +22,7 @@ director_cache = {}
 
 # DB 연결 및 처리
 try:
-    conn = mysql.connector.connect(**config)
+    conn = pymysql.connect(**config)
     cursor = conn.cursor()
 
     batch_size = 1000
@@ -70,7 +71,7 @@ try:
                     cursor.execute("SELECT did FROM Director WHERE dname = %s", (dname,))
                     result = cursor.fetchone()
                     if result:
-                        did = result[0]
+                        did = result['did']
                     else:
                         cursor.execute("INSERT INTO Director (dname) VALUES (%s)", (dname,))
                         did = cursor.lastrowid
@@ -78,12 +79,14 @@ try:
 
                 cursor.execute("INSERT IGNORE INTO Director_movie (did, mid) VALUES (%s, %s)", (did, mid))
 
+        conn.commit()
+
     print("모든 데이터 삽입 완료.")
 
-except mysql.connector.Error as err:
+except pymysql.Error as err:
     print(f"MySQL 에러 발생: {err}")
 
 finally:
-    if conn.is_connected():
+    if conn:
         cursor.close()
         conn.close()
