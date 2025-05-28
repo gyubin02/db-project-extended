@@ -1,13 +1,15 @@
 import pandas as pd
 import pymysql
+from dotenv import load_dotenv
+import os
 
-# DB 연결 설정
+load_dotenv()
 config = {
-    'user': 'db_user',
-    'password': 'db_user',
-    'host': 'localhost',
-    'database': 'movie',
-    'charset': 'utf8mb4',
+    'host': os.getenv('DB_HOST'),
+    'user': os.getenv('DB_USER'),
+    'password' : os.getenv('DB_PASSWORD'),
+    'database' : os.getenv('DB_NAME'),
+    'charset' : 'utf8mb4',
     'cursorclass': pymysql.cursors.DictCursor
 }
 
