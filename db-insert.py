@@ -38,7 +38,7 @@ try:
         for _, row in batch.iterrows():
             mname_kor = row['영화명']
             mname_eng = row['영화명(영문)']
-            year = int(row['제작연도']) if str(row['제작연도']).isdigit() else None
+            year = int(float(row['제작연도'])) if not pd.isna(row['제작연도']) and row['제작연도'] != '' else None
             mtype = row['유형']
             state = row['제작상태']
             nations = [x.strip() for x in row['제작국가'].split(',') if x.strip()]
