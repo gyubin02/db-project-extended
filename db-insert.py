@@ -1,13 +1,15 @@
 import pandas as pd
 import pymysql
+from dotenv import load_dotenv
+import os
 
-# DB 연결 설정
+load_dotenv()
 config = {
-    'user': 'db_user',
-    'password': 'db_user',
-    'host': 'localhost',
-    'database': 'movie',
-    'charset': 'utf8mb4',
+    'host': os.getenv('DB_HOST'),
+    'user': os.getenv('DB_USER'),
+    'password' : os.getenv('DB_PASSWORD'),
+    'database' : os.getenv('DB_NAME'),
+    'charset' : 'utf8mb4',
     'cursorclass': pymysql.cursors.DictCursor
 }
 
@@ -45,22 +47,22 @@ try:
 
             # 1. Movie_info 삽입
             cursor.execute("""
-                INSERT INTO Movie_info (mname_kor, mname_eng, year, type, state)
+                INSERT INTO movie_info (mname_kor, mname_eng, year, type, state)
                 VALUES (%s, %s, %s, %s, %s)
             """, (mname_kor, mname_eng, year, mtype, state))
             mid = cursor.lastrowid
 
             # 2. Movie_nation
             for nation in nations:
-                cursor.execute("INSERT INTO Movie_nation (mid, nation) VALUES (%s, %s)", (mid, nation))
+                cursor.execute("INSERT INTO movie_nation (mid, nation) VALUES (%s, %s)", (mid, nation))
 
             # 3. Movie_genre
             for genre in genres:
-                cursor.execute("INSERT INTO Movie_genre (mid, genre) VALUES (%s, %s)", (mid, genre))
+                cursor.execute("INSERT INTO movie_genre (mid, genre) VALUES (%s, %s)", (mid, genre))
 
             # 4. Movie_company
             for company in companies:
-                cursor.execute("INSERT INTO Movie_company (mid, company) VALUES (%s, %s)", (mid, company))
+                cursor.execute("INSERT INTO movie_company (mid, company) VALUES (%s, %s)", (mid, company))
 
             # 5. Director + 관계 테이블
             for dname in directors:
@@ -68,16 +70,16 @@ try:
                     did = director_cache[dname]
                 else:
                     # SELECT 먼저 (정확한 중복 확인)
-                    cursor.execute("SELECT did FROM Director WHERE dname = %s", (dname,))
+                    cursor.execute("SELECT did FROM director WHERE dname = %s", (dname,))
                     result = cursor.fetchone()
                     if result:
                         did = result['did']
                     else:
-                        cursor.execute("INSERT INTO Director (dname) VALUES (%s)", (dname,))
+                        cursor.execute("INSERT INTO director (dname) VALUES (%s)", (dname,))
                         did = cursor.lastrowid
                     director_cache[dname] = did
 
-                cursor.execute("INSERT IGNORE INTO Director_movie (did, mid) VALUES (%s, %s)", (did, mid))
+                cursor.execute("INSERT IGNORE INTO director_movie (did, mid) VALUES (%s, %s)", (did, mid))
 
         conn.commit()
 
