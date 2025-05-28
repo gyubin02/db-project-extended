@@ -16,6 +16,7 @@ config = {
 # 시트 두 개 읽고 합치기
 df1 = pd.read_excel('movie_data.xls', sheet_name='영화정보 리스트', header=4)
 df2 = pd.read_excel('movie_data.xls', sheet_name='영화정보 리스트_2', header=None)
+df2.columns = df1.columns
 df = pd.concat([df1, df2], ignore_index=True)
 df = df.fillna('').applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
