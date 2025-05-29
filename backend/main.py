@@ -11,7 +11,8 @@ def list_movies(
     size: int = Query(10, ge=1, le=100),
     title: Optional[str] = Query(None),
     director: Optional[str] = Query(None),
-    year: Optional[int] = Query(None),
+    year_from: Optional[int] = Query(None),
+    year_to: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
     movie_type: Optional[str] = Query(None),
     genre: Optional[str] = Query(None),
@@ -37,9 +38,15 @@ def list_movies(
     if director:
         filters.append("d.dname LIKE %s")
         params.append(f"%{director}%")
-    if year:
-        filters.append("m.year = %s")
-        params.append(year)
+    if year_from is not None and year_to is not None:
+        filters.append("m.year BETWEEN %s AND %s")
+        params.extend([year_from, year_to])
+    elif year_from is not None:
+        filters.append("m.year >= %s")
+        params.append(year_from)
+    elif year_to is not None:
+        filters.append("m.year <= %s")
+        params.append(year_to)
     if status:
         filters.append("m.state LIKE %s")
         params.append(f"%{status}%")
