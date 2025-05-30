@@ -1,9 +1,19 @@
 from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from typing import Optional
+from typing import Optional, List
 from db import get_connection
 
 app = FastAPI(title="Movie Catalog API")
+
+# CORS 설정 추가
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/movies")
 def list_movies(
@@ -13,10 +23,11 @@ def list_movies(
     director: Optional[str] = Query(None),
     year_from: Optional[int] = Query(None),
     year_to: Optional[int] = Query(None),
-    status: Optional[str] = Query(None),
-    movie_type: Optional[str] = Query(None),
-    genre: Optional[str] = Query(None),
-    country: Optional[str] = Query(None),
+    status: Optional[List[str]] = Query(None),
+    movie_type: Optional[List[str]] = Query(None),
+    genre: Optional[List[str]] = Query(None),
+    country: Optional[List[str]] = Query(None),
+    sort: Optional[str] = Query("release")  # year, title, release
 ):
     offset = (page - 1) * size
     filters = []
@@ -24,11 +35,11 @@ def list_movies(
 
     base_query = """
         FROM movie_info m
-        LEFT JOIN director_movie dm ON m.id = dm.mid
-        LEFT JOIN director d ON d.did = dm.did
-        LEFT JOIN movie_genre mg ON m.id = mg.mid
         LEFT JOIN movie_nation mc ON m.id = mc.mid
+        LEFT JOIN movie_genre mg ON m.id = mg.mid
         LEFT JOIN movie_company mp ON m.id = mp.mid
+        LEFT JOIN director_movie dm ON m.id = dm.mid
+        LEFT JOIN director d ON dm.did = d.did
         WHERE 1=1
     """
 
@@ -47,35 +58,58 @@ def list_movies(
     elif year_to is not None:
         filters.append("m.year <= %s")
         params.append(year_to)
+
+    def multi_filter(field: str, values: List[str]):
+        return f"({ ' OR '.join([f'{field} LIKE %s' for _ in values]) })", [f"%{v}%" for v in values]
+
     if status:
-        filters.append("m.state LIKE %s")
-        params.append(f"%{status}%")
+        clause, vals = multi_filter("m.state", status)
+        filters.append(clause)
+        params.extend(vals)
     if movie_type:
-        filters.append("m.type LIKE %s")
-        params.append(f"%{movie_type}%")
+        clause, vals = multi_filter("m.type", movie_type)
+        filters.append(clause)
+        params.extend(vals)
     if genre:
-        filters.append("mg.genre LIKE %s")
-        params.append(f"%{genre}%")
+        clause, vals = multi_filter("mg.genre", genre)
+        filters.append(clause)
+        params.extend(vals)
     if country:
-        filters.append("mc.nation LIKE %s")
-        params.append(f"%{country}%")
+        clause, vals = multi_filter("mc.nation", country)
+        filters.append(clause)
+        params.extend(vals)
 
     if filters:
         base_query += " AND " + " AND ".join(filters)
 
+    sort_clause = {
+        "recent": "ORDER BY m.id DESC",
+        "year": "ORDER BY m.year DESC",
+        "title": "ORDER BY m.mname_kor ASC"
+    }.get(sort, "ORDER BY m.id DESC")
+
     try:
         conn = get_connection()
         with conn.cursor() as cur:
-            # 총 개수 조회
             count_sql = f"SELECT COUNT(DISTINCT m.id) AS total {base_query}"
             cur.execute(count_sql, params)
             total = cur.fetchone()["total"]
 
-            # 영화 목록 조회
             data_sql = f"""
-                SELECT DISTINCT m.*
+                SELECT
+                    m.id,
+                    m.mname_kor,
+                    m.mname_eng,
+                    m.year,
+                    GROUP_CONCAT(DISTINCT mc.nation) AS nation,
+                    m.type,
+                    GROUP_CONCAT(DISTINCT mg.genre) AS genre,
+                    m.state,
+                    GROUP_CONCAT(DISTINCT d.dname) AS dname,
+                    GROUP_CONCAT(DISTINCT mp.company) AS company
                 {base_query}
-                ORDER BY m.id DESC
+                GROUP BY m.id
+                {sort_clause}
                 LIMIT %s OFFSET %s
             """
             cur.execute(data_sql, params + [size, offset])
