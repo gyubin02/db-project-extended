@@ -7,10 +7,9 @@ interface OrderDropdownProps {
 
 const OrderDropdown = ({ selectedOrder, setSelectedOrder }: OrderDropdownProps) => {
   const orderOptions = [
-    { value: "latest", label: "최신업데이트순" },
+    { value: "recent", label: "최신업데이트순" },
     { value: "year", label: "제작연도순" }, 
     { value: "title", label: "영화명순(ㄱ~Z)" },
-    { value: "release", label: "개봉일순" }
   ];
 
   return (

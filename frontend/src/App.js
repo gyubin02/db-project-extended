@@ -99,13 +99,13 @@ function App() {
 
   React.useEffect(() => {
     fetchMovies(currentPage, itemsPerPage, searchParams);
-  }, [currentPage, searchParams, selectedIndex]);
+  }, [currentPage, searchParams, selectedIndex, selectedOrder]);
 
   const handleReset = () => {
     setMovieName('');
     setDirectorName('');
-    setStartYear(2023);
-    setEndYear(2023);
+    setStartYear(1925);
+    setEndYear(2125);
     setCurrentPage(1);
     setSelectedIndex('');
     //제작상태, 유형, 장르, 국적 텍스트 초기화
@@ -118,8 +118,12 @@ function App() {
     setMovieType([]);
     setGenre([]);
     setNationality([]);
-    //검색 파라미터 초기화
-    setSearchParams('');
+    //검색 파라미터 초기화 (정렬 순서는 유지)
+    const params = new URLSearchParams();
+    if (selectedOrder) {
+      params.append("sort", selectedOrder);
+    }
+    setSearchParams(params.toString());
   };
 
   const handleSearch = () => {
@@ -156,6 +160,12 @@ function App() {
       nationality.forEach(nation => {
         params.append("country", nation);
       });
+    }
+    if (selectedOrder) {
+      params.append("sort", selectedOrder);
+    }
+    if (selectedIndex) {
+      params.append("title", selectedIndex);
     }
   
     const queryString = params.toString();
@@ -299,7 +309,17 @@ function App() {
       </div>
       <div style={styles.searchSection}>
         <div style={{marginLeft:'auto'}}>
-          <OrderDropdown selectedOrder={selectedOrder} setSelectedOrder={setSelectedOrder}/>
+          <OrderDropdown 
+            selectedOrder={selectedOrder} 
+            setSelectedOrder={(order) => {
+              setSelectedOrder(order);
+              const params = new URLSearchParams(searchParams);
+              params.set('sort', order);
+              const newQueryString = params.toString();
+              setSearchParams(newQueryString);
+              fetchMovies(1, itemsPerPage, newQueryString);
+            }}
+          />
         </div>
       </div>
 

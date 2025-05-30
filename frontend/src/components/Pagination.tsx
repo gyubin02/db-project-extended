@@ -41,6 +41,16 @@ const Pagination = ({
     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
       <button
         disabled={currentPage === 1}
+        onClick={() => onPageChange(1)}
+        style={{
+          padding: '4px 8px',
+          cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+        }}
+      >
+        &lt;&lt;
+      </button>
+      <button
+        disabled={currentPage === 1}
         onClick={() => onPageChange(currentPage - 1)}
         style={{
           padding: '4px 8px',
@@ -77,6 +87,16 @@ const Pagination = ({
         }}
       >
         &gt;
+      </button>
+      <button
+        disabled={currentPage === totalPages}
+        onClick={() => onPageChange(totalPages)}
+        style={{
+          padding: '4px 8px',
+          cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+        }}
+      >
+        &gt;&gt;
       </button>
     </div>
   );
