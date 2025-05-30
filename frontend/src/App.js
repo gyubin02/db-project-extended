@@ -82,8 +82,13 @@ function App() {
   //검색 파라미터
   const [searchParams, setSearchParams] = useState('');
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const fetchMovies = async (page = 1, size = 10, queryString = '') => {
+    if (isLoading) return; // 이미 로딩 중이면 새로운 요청을 무시
+    
     try {
+      setIsLoading(true);
       const url = `http://localhost:8000/movies?page=${page}&size=${size}${queryString ? `&${queryString}` : ''}`;
       const response = await fetch(url);
       const data = await response.json();
@@ -94,6 +99,8 @@ function App() {
       console.log(data);
     } catch (error) {
       console.error('영화 데이터를 불러오는데 실패했습니다:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -172,6 +179,12 @@ function App() {
     console.log(queryString);
     setSearchParams(queryString);
     fetchMovies(1, itemsPerPage, queryString);
+  };
+
+  // 페이지 변경 핸들러
+  const handlePageChange = (page) => {
+    if (isLoading) return; // 로딩 중이면 페이지 변경 무시
+    fetchMovies(page, itemsPerPage, searchParams);
   };
 
   return (
@@ -329,7 +342,7 @@ function App() {
           totalItems={totalItems} 
           itemsPerPage={itemsPerPage} 
           currentPage={currentPage} 
-          onPageChange={setCurrentPage} 
+          onPageChange={handlePageChange} 
         />
       </div>
     </div>
