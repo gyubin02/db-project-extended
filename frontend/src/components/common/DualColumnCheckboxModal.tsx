@@ -58,50 +58,52 @@ const DualColumnCheckboxModal = ({
           <span style={styles.title}>{title}</span>
           <button onClick={onClose} style={styles.close}>×</button>
         </div>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th>선택</th>
-              <th>{leftTitle}</th>
-              <th>선택</th>
-              <th>{rightTitle}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: maxLength }).map((_, i) => {
-              const left = leftOptions[i];
-              const right = rightOptions[i];
-              return (
-                <tr key={i}>
-                  <td>
-                    {left && (
-                      <input
-                        type="checkbox"
-                        checked={selectedLeft.includes(left.value)}
-                        onChange={() =>
-                          toggle(left.value, selectedLeft, onChangeLeft)
-                        }
-                      />
-                    )}
-                  </td>
-                  <td>{left?.label || ''}</td>
-                  <td>
-                    {right && (
-                      <input
-                        type="checkbox"
-                        checked={selectedRight.includes(right.value)}
-                        onChange={() =>
-                          toggle(right.value, selectedRight, onChangeRight)
-                        }
-                      />
-                    )}
-                  </td>
-                  <td>{right?.label || ''}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div style={styles.tableContainer}>
+          <table style={styles.table}>
+            <thead style={styles.thead}>
+              <tr>
+                <th style={styles.th}>선택</th>
+                <th style={styles.th}>{leftTitle}</th>
+                <th style={styles.th}>선택</th>
+                <th style={styles.th}>{rightTitle}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: maxLength }).map((_, i) => {
+                const left = leftOptions[i];
+                const right = rightOptions[i];
+                return (
+                  <tr key={i}>
+                    <td style={styles.td}>
+                      {left && (
+                        <input
+                          type="checkbox"
+                          checked={selectedLeft.includes(left.value)}
+                          onChange={() =>
+                            toggle(left.value, selectedLeft, onChangeLeft)
+                          }
+                        />
+                      )}
+                    </td>
+                    <td style={styles.td}>{left?.label || ''}</td>
+                    <td style={styles.td}>
+                      {right && (
+                        <input
+                          type="checkbox"
+                          checked={selectedRight.includes(right.value)}
+                          onChange={() =>
+                            toggle(right.value, selectedRight, onChangeRight)
+                          }
+                        />
+                      )}
+                    </td>
+                    <td style={styles.td}>{right?.label || ''}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
         <div style={styles.footer}>
           <button onClick={onConfirm} style={styles.confirm}>확인</button>
         </div>
@@ -121,11 +123,14 @@ const styles: { [key: string]: CSSProperties } = {
     zIndex: 1000,
   },
   modal: {
-    width: 500,
+    width: 800,
+    maxHeight: '80vh',
     backgroundColor: '#fff',
     borderRadius: 6,
     padding: 16,
     boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+    display: 'flex',
+    flexDirection: 'column',
   },
   header: {
     display: 'flex',
@@ -142,12 +147,34 @@ const styles: { [key: string]: CSSProperties } = {
     fontSize: 20,
     cursor: 'pointer',
   },
+  tableContainer: {
+    flex: 1,
+    overflowY: 'auto',
+    marginBottom: 12,
+  },
   table: {
     width: '100%',
-    marginBottom: 12,
+    borderCollapse: 'collapse',
+  },
+  thead: {
+    position: 'sticky',
+    top: 0,
+    backgroundColor: '#fff',
+    zIndex: 1,
+  },
+  th: {
+    padding: '8px',
+    textAlign: 'left',
+    borderBottom: '2px solid #ddd',
+    backgroundColor: '#f5f5f5',
+  },
+  td: {
+    padding: '8px',
+    borderBottom: '1px solid #ddd',
   },
   footer: {
     textAlign: 'right',
+    marginTop: 'auto',
   },
   confirm: {
     backgroundColor: '#1976d2',
