@@ -9,8 +9,8 @@ interface Movie {
   type: string;
   genre: string;
   state: string;
-  director: string;
-  producer: string;
+  dname: string;
+  company: string;
 }
 
 interface MovieTableProps {
@@ -89,8 +89,8 @@ const MovieTable = ({ data }: MovieTableProps) => {
             <td style={styles.td}>{movie.type}</td>
             <td style={styles.td}>{movie.genre}</td>
             <td style={styles.td}>{movie.state}</td>
-            <td style={styles.td}>{movie.director}</td>
-            <td style={styles.td}>{movie.producer}</td>
+            <td style={styles.td}>{movie.dname}</td>
+            <td style={styles.td}>{movie.company}</td>
           </tr>
         ))}
       </tbody>
