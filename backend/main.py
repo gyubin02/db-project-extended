@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Optional, List
 from db import get_connection
+from utils.chosung import get_chosung_range
 
 app = FastAPI(title="Movie Catalog API")
 
@@ -27,7 +28,8 @@ def list_movies(
     movie_type: Optional[List[str]] = Query(None),
     genre: Optional[List[str]] = Query(None),
     country: Optional[List[str]] = Query(None),
-    sort: Optional[str] = Query("release")  # year, title, release
+    sort: Optional[str] = Query("release"),
+    index: Optional[str] = Query(None)
 ):
     offset = (page - 1) * size
     filters = []
@@ -58,6 +60,16 @@ def list_movies(
     elif year_to is not None:
         filters.append("m.year <= %s")
         params.append(year_to)
+        
+    if index:
+        chosung_range = get_chosung_range(index)
+        if chosung_range:
+            start, end = chosung_range
+            filters.append("m.mname_kor >= %s AND m.mname_kor <= %s")
+            params.extend([start, end])
+        elif index.isalpha():
+            filters.append("UPPER(m.mname_eng) LIKE %s")
+            params.append(f"{index.upper()}%")
 
     def multi_filter(field: str, values: List[str]):
         return f"({ ' OR '.join([f'{field} LIKE %s' for _ in values]) })", [f"%{v}%" for v in values]
