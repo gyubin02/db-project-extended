@@ -12,7 +12,7 @@ CREATE TABLE movie_info (
 -- 2. 제작국가 (N:1)
 CREATE TABLE movie_nation (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    mid INT NOT NULL,
+    mid INT NOT NULL,   
     nation VARCHAR(100) NOT NULL,
     FOREIGN KEY (mid) REFERENCES movie_info(id) ON DELETE CASCADE
 );
