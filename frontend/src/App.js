@@ -172,7 +172,7 @@ function App() {
       params.append("sort", selectedOrder);
     }
     if (selectedIndex) {
-      params.append("title", selectedIndex);
+      params.append("index", selectedIndex);
     }
   
     const queryString = params.toString();
@@ -313,7 +313,7 @@ function App() {
           onSelect={(char) => {
             setSelectedIndex(char);
             const params = new URLSearchParams(searchParams);
-            params.set('title', char);
+            params.set('index', char);
             const newQueryString = params.toString();
             setSearchParams(newQueryString);
             fetchMovies(1, itemsPerPage, newQueryString);
