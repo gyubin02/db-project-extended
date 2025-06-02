@@ -106,7 +106,7 @@ function App() {
 
   React.useEffect(() => {
     fetchMovies(currentPage, itemsPerPage, searchParams);
-  }, [currentPage, searchParams, selectedIndex, selectedOrder]);
+  }, [searchParams]);
 
   const handleReset = () => {
     setMovieName('');
@@ -177,8 +177,8 @@ function App() {
   
     const queryString = params.toString();
     console.log(queryString);
+    setCurrentPage(1);
     setSearchParams(queryString);
-    fetchMovies(1, itemsPerPage, queryString);
   };
 
   // 페이지 변경 핸들러
@@ -316,7 +316,6 @@ function App() {
             params.set('index', char);
             const newQueryString = params.toString();
             setSearchParams(newQueryString);
-            fetchMovies(1, itemsPerPage, newQueryString);
           }} 
         />
       </div>
@@ -330,7 +329,7 @@ function App() {
               params.set('sort', order);
               const newQueryString = params.toString();
               setSearchParams(newQueryString);
-              fetchMovies(1, itemsPerPage, newQueryString);
+              //fetchMovies(1, itemsPerPage, newQueryString);
             }}
           />
         </div>
