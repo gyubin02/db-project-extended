@@ -65,7 +65,7 @@ def list_movies(
         chosung_range = get_chosung_range(index)
         if chosung_range:
             start, end = chosung_range
-            filters.append("m.mname_kor >= %s AND m.mname_kor <= %s")
+            filters.append("m.mname_kor >= %s AND m.mname_kor < %s")
             params.extend([start, end])
         elif index.isalpha():
             filters.append("UPPER(m.mname_eng) LIKE %s")
