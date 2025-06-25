@@ -1,4 +1,3 @@
-// components/TopDirectorList.tsx
 import React, { useEffect, useState } from 'react';
 
 type TopDirector = {
