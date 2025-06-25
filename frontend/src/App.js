@@ -11,6 +11,7 @@ import ProductionStatusModal from './components/ProductionStatusModal.tsx';
 import MovieTypeModal from './components/MovieTypeModal.tsx';
 import GenreModal from './components/GenreModal.tsx';
 import NationalityModal from './components/NationalityModal.tsx';
+import TopDirectorList from './components/TopDirectorList.tsx';
 
 const styles = {
   container: {
@@ -318,6 +319,10 @@ function App() {
             setSearchParams(newQueryString);
           }} 
         />
+
+        <div style={{ marginLeft: 'auto' }}>
+          <TopDirectorList />
+        </div>
       </div>
       <div style={styles.searchSection}>
         <div style={{marginLeft:'auto'}}>
