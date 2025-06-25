@@ -4,6 +4,13 @@ from fastapi.responses import JSONResponse
 from typing import Optional, List
 from db import get_connection
 from utils.chosung import get_chosung_range
+from aiokafka import AIOKafkaProducer;
+from aiokafka import AIOKafkaConsumer;
+import redis.asyncio as redis;
+import asyncio;
+from contextlib import asynccontextmanager;
+
+redis_client = redis.Redis(host="localhost", port=6379, db=0)
 
 app = FastAPI(title="Movie Catalog API")
 
@@ -16,8 +23,45 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# consumer (FastAPI 애플리케이션 백그라운드에서 실행)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    consumer = AIOKafkaConsumer(
+        "popular-directors",
+        bootstrap_servers="localhost:9092",
+        group_id="popular-directors-group"
+    )
+    await consumer.start()
+    print("Kafka consumer started")
+
+    async def consume_popular_director():
+        async for msg in consumer:
+            name = msg.value.decode("utf-8")
+            await redis_client.zincrby("popular-directors", 1, name)
+            print(f"Kafka -> Redis: {name}")
+
+    task = asyncio.create_task(consume_popular_director()) # consume을 background로 계속 실행
+    try:
+        yield
+    finally:
+        print("shutting down kafka consumer")
+        task.cancel()
+        await consumer.stop()
+
+app.router.lifespan_context = lifespan
+
+# 인기 감독 조회
+@app.get("/popular-directors")
+async def get_popular_directors():
+    top5 = await redis_client.zrevrange("popular-directors", 0, 4, withscores=True)
+    result = [{"name": name.decode("utf-8"), "count": int(score)} for name, score in top5]
+    return JSONResponse(content={
+        "popular_directors": result
+    })
+
+# 영화 목록 조회
 @app.get("/movies")
-def list_movies(
+async def list_movies(
     page: int = Query(1, ge=1),
     size: int = Query(10, ge=1, le=100),
     title: Optional[str] = Query(None),
@@ -51,6 +95,24 @@ def list_movies(
     if director:
         filters.append("d.dname LIKE %s")
         params.append(f"%{director}%")
+
+        # producer
+        conn = get_connection();
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1 FROM director WHERE dname = %s", (director,))
+                exists = cur.fetchone()
+                if exists:
+                    producer = AIOKafkaProducer(bootstrap_servers="localhost:9092")
+                    await producer.start()
+                    try:
+                        await producer.send_and_wait("popular-directors", director.encode("utf-8"))
+                        print(f"Produced Kafka message: {director}")
+                    finally:
+                        await producer.stop()
+
+        finally:
+            conn.close()
     if year_from is not None and year_to is not None:
         filters.append("m.year BETWEEN %s AND %s")
         params.extend([year_from, year_to])
